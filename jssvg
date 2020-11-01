@@ -1,0 +1,73 @@
+panZoom = null;
+
+$(document).ready(function() {
+    panZoom = svgPanZoom('#mapa-mundi', {
+          zoomEnabled: true,
+          controlIconsEnabled: true,
+          fit: true,
+          center: true,
+          minZoom: 1, 
+          maxZoom: 200,
+          zoomScaleSensitivity: 1
+        });
+
+     $(window).resize(function(){
+          panZoom.resize();
+          panZoom.fit();
+          panZoom.center();
+        })
+        
+        $("#spain").on("click", function() {
+          zoomToPathWithID("espanya")
+        });
+        
+        $("#france").on("click", function() {
+          zoomToPathWithID("francia")
+        });
+        
+        $("#arg").on("click", function() {
+          zoomToPathWithID("argentina")
+        });
+        
+        $("#aus").on("click", function() {
+          zoomToPathWithID("austria")
+        });
+});
+
+
+//Find your root SVG element
+var svg = document.querySelector('#mapa-mundi');
+
+//Create an SVGPoint for future math
+var pt = svg.createSVGPoint();
+
+//Get point in global SVG space
+function cursorPoint(evt){
+ pt.x = evt.clientX; pt.y = evt.clientY;
+ return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+svg.addEventListener('click',function(evt){
+ var loc = cursorPoint(evt);
+ alert(loc.x+" "+loc.y);
+},false);
+
+function zoomToPathWithID(id){
+  panZoom.reset();
+
+  //REM: Apparently the values need some times to adjust after reset() is called, yet is seems to have no callback.
+  window.setTimeout(function(){
+      var tViewport = document.querySelector('g.svg-pan-zoom_viewport');
+      var tMatrix = tViewport.transform.baseVal.getItem(0).matrix;
+      var tBBox = document.getElementById(id).getBBox();
+      var tPoint = {x: (tBBox.x + tBBox.width / 2) * tMatrix.a + tMatrix.e, y: (tBBox.y + tBBox.height / 2) * tMatrix.d + tMatrix.f}
+
+      //REM: Approximate values, I leave the exact calculation up to you.
+      panZoom.zoomAtPoint(12, tPoint);
+}, 500)
+}
+
+
+
+https://jsfiddle.net/04Lg9ruj/
+https://stackoverflow.com/questions/59579575/how-to-get-x-y-coordinates-from-path-element-inside-svg
